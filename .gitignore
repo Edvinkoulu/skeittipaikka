@@ -1,0 +1,63 @@
+# --- Node.js / Backend ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build output
+dist/
+build/
+.cache/
+
+# Logs
+logs/
+*.log
+*.log.*
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Runtime data
+*.tsbuildinfo
+
+# --- React / Frontend ---
+# Dependencies
+**/node_modules/
+
+# Build outputs (CRA, Vite, Next, jne.)
+**/build/
+**/.next/
+**/out/
+**/dist/
+**/.parcel-cache/
+**/.vite/
+
+# Testing
+coverage/
+
+# Local env files (React)
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+
+# --- Common / Misc ---
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# --- Project specific ---
+# Kuvien upload-kansio (Express tallentaa tänne)
+uploads/
