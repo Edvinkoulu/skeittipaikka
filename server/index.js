@@ -24,7 +24,7 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log('MongoDB yhdistetty'))
 .catch(err => console.error('MongoDB-yhteysvirhe:', err));
 
-// Skeema
+// Spotin skeema
 const spotSchema = new mongoose.Schema({
   name: String,
   city: String,
@@ -41,7 +41,6 @@ const spotSchema = new mongoose.Schema({
     default: ["/images/default-spot.svg"] 
   } 
 });
-
 const Spot = mongoose.model('Spot', spotSchema);
 
 // Multer tallentaa levylle uploads-kansioon
@@ -106,7 +105,7 @@ app.get('/api/reverse', async (req, res) => {
 app.post('/api/spots', uploadDisk.array('images'), async (req, res) => {
   try {
     const { name, city, coords, description, ratingFlat, ratingCrowd, category } = req.body;
-
+    await verifyCaptcha(captcha); // captcha tarkistus
     let parsedCoords = coords;
     if (typeof coords === 'string') {
       try { parsedCoords = JSON.parse(coords); } catch { parsedCoords = {}; }
@@ -167,6 +166,47 @@ app.post('/api/spots/:id/add-image', uploadDisk.single('image'), async (req, res
     res.status(500).json({ message: 'Kuvan tallennus epäonnistui' });
   }
 });
+
+
+// Feedback Schema ja Model
+const FeedbackSchema = new mongoose.Schema({
+  text: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Feedback = mongoose.model('Feedback', FeedbackSchema);
+
+// Palaute
+app.post('/api/feedback', async (req, res) => {
+  try {
+    const { feedback, captcha } = req.body;
+    if (!feedback) {
+      return res.status(400).json({ error: 'Palautetta ei annettu' });
+    }
+    await verifyCaptcha(captcha); // captcha tarkistus
+    const newFeedback = new Feedback({ text: feedback });
+    await newFeedback.save();
+
+    res.status(201).json(newFeedback);
+  } catch (err) {
+    console.error('Virhe palautteen tallennuksessa:', err);
+    res.status(500).json({ error: 'Palautteen tallennus epäonnistui' });
+  }
+});
+
+// captcha tarkistus
+const verifyCaptcha = async (captcha) => {
+  if (!captcha) {
+    throw new Error('CAPTCHA vahvistus puuttuu');
+  }
+  const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${captcha}`;
+  const captchaRes = await fetch(verifyUrl, { method: 'POST' });
+  const data = await captchaRes.json();
+  
+  if (!data.success) {
+    throw new Error('CAPTCHA vahvistus epäonnistui');
+  }
+};
 
 const PORT = process.env.PORT || 5050;
 app.listen(PORT, () => console.log(`Serveri käynnissä: http://localhost:${PORT}`));
